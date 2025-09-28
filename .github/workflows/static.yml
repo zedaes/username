@@ -23,6 +23,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -40,7 +42,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist # change if your build output folder differs (e.g. build/)
+          path: ./dist # change if your build output folder differs
 
   deploy:
     name: Deploy to GitHub Pages
@@ -59,9 +61,12 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     concurrency: ci-lint-${{ github.ref }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -74,9 +79,12 @@ jobs:
     name: Spellcheck
     runs-on: ubuntu-latest
     concurrency: ci-cspell-${{ github.ref }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
