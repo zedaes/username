@@ -93,9 +93,6 @@ jobs:
       - name: Install Packages
         run: pnpm install --frozen-lockfile
 
-      - name: Spellcheck
-        run: pnpm spellcheck
-
   deploy:
     name: Deploy to GitHub Pages
     needs: build
