@@ -2,10 +2,14 @@ name: CI
 
 on:
   push:
+    branches:
+      - main # adjust if your default branch is different
   pull_request:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -16,73 +20,67 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: "**/pnpm-lock.yaml"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install Packages
         run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist # change if your build output folder differs (e.g. build/)
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     concurrency: ci-lint-${{ github.ref }}
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: "true"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: "**/pnpm-lock.yaml"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm ci:lint
 
-      - name: Install Packages
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm ci:lint
   spellcheck:
     name: Spellcheck
     runs-on: ubuntu-latest
     concurrency: ci-cspell-${{ github.ref }}
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: "true"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: "**/pnpm-lock.yaml"
-
-      - name: Install Packages
-        run: pnpm install --frozen-lockfile
-
-      - name: Spellcheck
-        run: pnpm spellcheck
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm spellcheck
